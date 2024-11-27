@@ -32,21 +32,35 @@ def main():
         page = browser.contexts[0].pages[0]
         
         page.goto('https://www.youtube.com/watch?v=i_fPatDvfGY', timeout=0)
-        print('click')
+        page.wait_for_load_state('networkidle')
+
         page.click("//button[contains(@class, 'ytp-large-play-button ytp-button')]")
         # await asyncio.sleep(5)
         scroll_count = 5
-        print('here')
         while scroll_count:
             page.locator("//ytd-comments[contains(@id, 'comments')]").scroll_into_view_if_needed()
-            page.wait_for_timeout(10000) 
-            with open('file.txt', 'w',encoding="utf-8") as f:
-                f.write(page.content())
-            return
-            page.locator("//yt-formatted-string[contains(@id, 'contenteditable-textarea')]").fill('12312321')
-            print(scroll_count)
+            page.wait_for_timeout(2000)
             scroll_count -= 1
-        #creation-box
+
+        try:
+            page.wait_for_selector("//ytd-comment-simplebox-renderer//div[@contenteditable='true']", timeout=30000)
+            print("Comment box is available")
+
+            # JavaScript code to insert comment and click submit
+            page.evaluate(f"""
+                var commentBox = document.querySelector('ytd-comment-simplebox-renderer div[contenteditable="true"]');
+                var submitButton = document.querySelector('ytd-comment-simplebox-renderer #submit-button');
+
+                if (commentBox) {{
+                    commentBox.innerHTML = 'asdasdasd';
+                    commentBox.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                    submitButton.click();
+                }}
+            """)
+            print("Comment posted")
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            #creation-box
         # await browser.disconnect()
         dolphin.close_profile(profile_id)
 
